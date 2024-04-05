@@ -4,3 +4,4 @@
 
 void minisystem();
 void whereishere();
+void fork_example();
