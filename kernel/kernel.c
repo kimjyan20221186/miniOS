@@ -20,8 +20,11 @@ int main() {
             break;
         }
 
-        if (strcmp(input,"minisystem") == 0){
+        else if (strcmp(input,"minisystem") == 0){
             minisystem();
+        }
+        else if (strcmp(input,"whereishere") == 0){
+            whereishere();
         }
         else system(input);
     }

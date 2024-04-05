@@ -3,3 +3,4 @@
 //SSU struct task_struct {
 
 void minisystem();
+void whereishere();
