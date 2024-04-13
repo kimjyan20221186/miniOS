@@ -4,4 +4,4 @@
 
 void minisystem();
 void whereishere();
-void fork_example();
+void fork_forIPC();

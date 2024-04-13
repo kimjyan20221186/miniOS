@@ -26,8 +26,8 @@ int main() {
         else if (strcmp(input,"whereishere") == 0){
             whereishere();
         }
-        else if (strcmp(input, "forkex") == 0){
-            fork_example();
+        else if (strcmp(input, "forkpipe") == 0){
+            fork_forIPC();
         }
         else system(input);
     }
