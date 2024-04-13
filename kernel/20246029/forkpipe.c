@@ -5,9 +5,9 @@
 #include <stdlib.h> 
 #include <sys/wait.h> 
 
-#define BUFFER SIZE 256
-#define READ END 0
-#define WRITE END 1
+#define BUFFER_SIZE 256
+#define READ_END 0
+#define WRITE_END 1
 
 void fork_forIPC() {
     char write_msg[BUFFER_SIZE] = "Greetings";
