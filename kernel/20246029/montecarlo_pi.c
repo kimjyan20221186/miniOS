@@ -5,9 +5,9 @@
 #include <unistd.h>
 
 #define NUM_THREADS 4
+#define NUM_POINTS 20000000
 
 long long circle_points = 0;
-long long total_points = 0;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void* gen_points(void* args) {
@@ -32,26 +32,18 @@ void* gen_points(void* args) {
 
 int pi(int argc, char* argv[]) {
     pthread_t threads[NUM_THREADS];
-    long long num_points;
     int i;
-    if (argc != 2) {
-        printf("Usage: %s <total_number_of_points>\n", argv[0]);
-        return 1;
-    }
-
-    total_points = atoll(argv[1]);
-    num_points = total_points;
 
     // 스레드 생성
     for (i = 0; i < NUM_THREADS; i++) {
-        pthread_create(&threads[i], NULL, gen_points, (void*)&num_points);
+        pthread_create(&threads[i], NULL, gen_points, NULL);
     }
     // 스레드 종료 대기
     for (i = 0; i < NUM_THREADS; i++) {
         pthread_join(threads[i], NULL);
     }
     // π 추정
-    double pi_estimate = 4.0 * circle_points / total_points;
+    double pi_estimate = 4.0 * circle_points / NUM_POINTS;
     printf("Estimated π = %f\n", pi_estimate);
 
     return 0;
