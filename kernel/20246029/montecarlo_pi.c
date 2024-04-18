@@ -51,4 +51,4 @@ void pi(int argc, char* argv[]) {
     double pi_estimate = 4.0 * circle_points / NUM_POINTS;
     printf("Estimated π = %f\n", pi_estimate);
 }
-
+}
