@@ -5,4 +5,4 @@
 void minisystem();
 void whereishere();
 void fork_forIPC();
-int pi();
+void pi();

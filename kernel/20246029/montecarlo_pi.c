@@ -30,7 +30,7 @@ void* gen_points(void* args) {
     pthread_exit(NULL);
 }
 
-int pi(int argc, char* argv[]) {
+void pi(int argc, char* argv[]) {
     pthread_t threads[NUM_THREADS];
     int i;
 
@@ -45,7 +45,5 @@ int pi(int argc, char* argv[]) {
     // π 추정
     double pi_estimate = 4.0 * circle_points / NUM_POINTS;
     printf("Estimated π = %f\n", pi_estimate);
-
-    return 0;
 }
 
