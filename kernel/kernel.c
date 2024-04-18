@@ -29,6 +29,9 @@ int main() {
         else if (strcmp(input, "forkpipe") == 0){
             fork_forIPC();
         }
+        else if (strcmp(input, "pi") == 0){
+            pi();
+        }
         else system(input);
     }
 
