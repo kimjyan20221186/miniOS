@@ -32,12 +32,17 @@ void* gen_points(void* args) {
 
 void pi(int argc, char* argv[]) {
     pthread_t threads[NUM_THREADS];
+    long long points_per_thread[NUM_THREADS];
     int i;
+    long long points = NUM_POINTS / NUM_THREADS;
+    long long remainder = NUM_POINTS % NUM_THREADS;
 
-    // 스레드 생성
     for (i = 0; i < NUM_THREADS; i++) {
-        pthread_create(&threads[i], NULL, gen_points, NULL);
-    }
+        points_per_thread[i] = points;
+        if (remainder > 0) {
+            points_per_thread[i]++;
+            remainder--;
+        }
     // 스레드 종료 대기
     for (i = 0; i < NUM_THREADS; i++) {
         pthread_join(threads[i], NULL);
