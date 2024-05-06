@@ -1,31 +1,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct {
-    int id;
-    int burst_time;
-    int waiting_time;
-    int turnaround_time;
-    int arrival_time;
-    int remaining_time;
-} Process;
+struct Process {
+    int pid; // Process ID
+    int arrivalTime; // 도착 시간
+    int burstTime; // 실행 시간
+    int waitingTime; // 대기 시간
+    int turnaroundTime; // 전체 실행 시간
+    int remainingTime; // 남은 실행 시간
+};
 
-void calculateTime(Process *processes, int count, int quantum) {
-    int time = 0, i;
-    int all_done = 0;
-    while (!all_done) {
-        all_done = 1;
-        for (i = 0; i < count; i++) {
-            if (processes[i].remaining_time > 0) {
-                all_done = 0; 
-                if (processes[i].remaining_time > quantum) {
+void calculateTime(struct Process *processes, int count, int quantum) {
+    int time = 0, completed = 0;
+    while (completed < count) {
+        for (int i = 0; i < count; i++) {
+            if (processes[i].arrivalTime <= time && processes[i].remainingTime > 0) {
+                if (processes[i].remainingTime > quantum) {
                     time += quantum;
-                    processes[i].remaining_time -= quantum;
+                    processes[i].remainingTime -= quantum;
                 } else {
-                    time += processes[i].remaining_time;
-                    processes[i].waiting_time = time - processes[i].burst_time - processes[i].arrival_time;
-                    processes[i].turnaround_time = time - processes[i].arrival_time;
-                    processes[i].remaining_time = 0;
+                    time += processes[i].remainingTime;
+                    processes[i].waitingTime = time - processes[i].arrivalTime - processes[i].burstTime;
+                    processes[i].turnaroundTime = time - processes[i].arrivalTime;
+                    processes[i].remainingTime = 0;
+                    completed++;
                 }
             }
         }
@@ -33,36 +31,36 @@ void calculateTime(Process *processes, int count, int quantum) {
 }
 
 void Round_Robin() {
-    int i, count, quantum;
-    float total_waiting_time = 0, total_turnaround_time = 0;
-
-    printf("프로세스의 수를 입력하세요: ");
+    int count, quantum;
+    printf("프로세스의 개수를 입력하세요: ");
     scanf("%d", &count);
-    Process *processes = (Process *)malloc(count * sizeof(Process));
+    struct Process *processes = (struct Process*) malloc(sizeof(struct Process) * count);
 
-    for (i = 0; i < count; i++) {
-        printf("\n프로세스 %d의 도착 시간: ", i + 1);
-        scanf("%d", &processes[i].arrival_time);
-        printf("프로세스 %d의 실행 시간(버스트 타임): ", i + 1);
-        scanf("%d", &processes[i].burst_time);
-        processes[i].id = i + 1;
-        processes[i].remaining_time = processes[i].burst_time;
+    for (int i = 0; i < count; i++) {
+        processes[i].pid = i + 1;
+        printf("프로세스 %d의 도착 시간과 실행 시간을 입력하세요: ", i + 1);
+        scanf("%d %d", &processes[i].arrivalTime, &processes[i].burstTime);
+        processes[i].remainingTime = processes[i].burstTime;
     }
 
-    printf("\n타임 퀀텀을 입력하세요: ");
+    printf("타임 퀀텀을 입력하세요: ");
     scanf("%d", &quantum);
 
     calculateTime(processes, count, quantum);
 
-    printf("\n프로세스 ID\t버스트 타임\t대기 시간\t전체 실행 시간\n");
-    for (i = 0; i < count; i++) {
-        total_waiting_time += processes[i].waiting_time;
-        total_turnaround_time += processes[i].turnaround_time;
-        printf("%d\t\t%d\t\t%d\t\t%d\n", processes[i].id, processes[i].burst_time, processes[i].waiting_time, processes[i].turnaround_time);
+    printf("\nPID\tBurst Time\tWaiting Time\tTurnaround Time\n");
+    for (int i = 0; i < count; i++) {
+        printf("%d\t%d\t\t%d\t\t%d\n", processes[i].pid, processes[i].burstTime, processes[i].waitingTime, processes[i].turnaroundTime);
     }
 
-    printf("\n평균 대기 시간 = %.2f", total_waiting_time / count);
-    printf("\n평균 전체 실행 시간 = %.2f\n", total_turnaround_time / count);
+    int totalWaitingTime = 0, totalTurnaroundTime = 0;
+    for (int i = 0; i < count; i++) {
+        totalWaitingTime += processes[i].waitingTime;
+        totalTurnaroundTime += processes[i].turnaroundTime;
+    }
+
+    printf("평균 대기 시간: %.2f\n", (float)totalWaitingTime / count);
+    printf("평균 전체 실행 시간: %.2f\n", (float)totalTurnaroundTime / count);
 
     free(processes);
 }
