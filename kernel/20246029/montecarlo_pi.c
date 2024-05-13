@@ -51,8 +51,3 @@ void pi() {
     printf("추정된 파이 값 = %f\n", 4.0 * circle_points / total_points);
     pthread_mutex_destroy(&mutex);
 }
-
-int main() {
-    pi();
-    return 0;
-}
