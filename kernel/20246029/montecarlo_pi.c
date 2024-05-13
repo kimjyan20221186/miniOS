@@ -4,45 +4,55 @@
 #include <time.h>
 #include <unistd.h>
 
-#define NUM_THREADS 4
-#define NUM_POINTS 20000000
+pthread_mutex_t mutex;
+int circle_points = 0, total_points = 0;
 
-long long circle_points = 0;
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+typedef struct {
+    int points_to_generate;
+} ThreadData;
 
-void* gen_points(void* args) {
-    long long num_points = *((long long*)args);
-    double x, y;
-    long long i, cc_points_local = 0;
-    unsigned int seed = time(NULL) ^ (unsigned int)pthread_self();
-    for (i = 0; i < num_points; i++) {
-        x = (double)rand_r(&seed) / RAND_MAX * 2 - 1;
-        y = (double)rand_r(&seed) / RAND_MAX * 2 - 1;
-        if (x * x + y * y <= 1) {
-            cc_points_local++;
-        }
+void *generate_points(void *arg) {
+    ThreadData *data = (ThreadData *)arg;
+    int count = 0;
+    unsigned int seed = time(NULL) ^ pthread_self();
+    
+    for(int i = 0; i < data->points_to_generate; ++i) {
+        double x = (double)rand_r(&seed) / RAND_MAX;
+        double y = (double)rand_r(&seed) / RAND_MAX;
+        if(x * x + y * y <= 1) count++;
     }
+    
     pthread_mutex_lock(&mutex);
-    circle_points += cc_points_local;
+    circle_points += count;
+    total_points += data->points_to_generate;
     pthread_mutex_unlock(&mutex);
+    
     return NULL;
 }
 
-void pi(int argc, char* argv[]) {
-    pthread_t threads[NUM_THREADS];
-    long long points_per_thread[NUM_THREADS];
-    long long points = NUM_POINTS / NUM_THREADS;
-    long long remainder = NUM_POINTS % NUM_THREADS;
-    // 스레드 생성
-    for (int i = 0; i < NUM_THREADS; i++) {
-        points_per_thread[i] = points + (i < remainder ? 1 : 0);
-        pthread_create(&threads[i], NULL, gen_points, (void *)&points_per_thread[i]);
+void pi() {
+    int num_threads, num_points;
+    printf("스레드의 수와 스레드당 생성할 점의 수를 입력하세요: ");
+    scanf("%d %d", &num_threads, &num_points);
+
+    pthread_t threads[num_threads];
+    ThreadData data[num_threads];
+    pthread_mutex_init(&mutex, NULL);
+    
+    for(int i = 0; i < num_threads; i++) {
+        data[i].points_to_generate = num_points;
+        pthread_create(&threads[i], NULL, generate_points, (void *)&data[i]);
     }
-    // 스레드 종료 대기
-    for (int i = 0; i < NUM_THREADS; i++) {
+    
+    for(int i = 0; i < num_threads; i++) {
         pthread_join(threads[i], NULL);
     }
-    // π 추정
-    double pi_estimate = 4.0 * circle_points / NUM_POINTS;
-    printf("Estimated π = %f\n", pi_estimate);
+    
+    printf("추정된 파이 값 = %f\n", 4.0 * circle_points / total_points);
+    pthread_mutex_destroy(&mutex);
+}
+
+int main() {
+    pi();
+    return 0;
 }
