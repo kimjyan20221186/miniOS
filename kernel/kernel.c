@@ -35,6 +35,9 @@ int main() {
         else if (strcmp(input, "roundrobin") == 0){
             Round_Robin();
         }
+        else if (strcmp(input, "water") == 0){
+            water();
+        }
         else system(input);
     }
 
