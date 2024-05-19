@@ -5,16 +5,29 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <time.h>
 #include "test.c"
 
 local_mutex_t mutexWater;
 pthread_cond_t condWater;
 int water = 0;
-int context_switches = 0;
+
+struct timespec start_time, end_time;
+double total_wait_time = 0;
+double total_response_time = 0;
+int total_operations = 0;
 
 void *purifier(void *arg) {
     for (int i = 0; i < 5; i++) {
+        struct timespec wait_start, wait_end;
+
+        clock_gettime(CLOCK_REALTIME, &wait_start);
         local_mutex_lock(&mutexWater);
+        clock_gettime(CLOCK_REALTIME, &wait_end);
+
+        double wait_time = (wait_end.tv_sec - wait_start.tv_sec) + (wait_end.tv_nsec - wait_start.tv_nsec) / 1e9;
+        total_wait_time += wait_time;
+
         water += 70;
         printf("============================물 채움. 현재 물의 양: %d\n", water);
         local_mutex_unlock(&mutexWater);
@@ -25,7 +38,16 @@ void *purifier(void *arg) {
 }
 
 void *drink(void *arg) {
+    struct timespec wait_start, wait_end, response_start, response_end;
+
+    clock_gettime(CLOCK_REALTIME, &response_start);
+    clock_gettime(CLOCK_REALTIME, &wait_start);
     local_mutex_lock(&mutexWater);
+    clock_gettime(CLOCK_REALTIME, &wait_end);
+
+    double wait_time = (wait_end.tv_sec - wait_start.tv_sec) + (wait_end.tv_nsec - wait_start.tv_nsec) / 1e9;
+    total_wait_time += wait_time;
+
     while (water < 40) {
         printf("물이 부족하니 기다릴게.. \n");
         pthread_cond_wait(&condWater, &mutexWater.lock);
@@ -33,6 +55,11 @@ void *drink(void *arg) {
     water -= 40;
     printf("고마워. 물을 마시고 나니 남은 양: %d\n", water);
     local_mutex_unlock(&mutexWater);
+    clock_gettime(CLOCK_REALTIME, &response_end);
+
+    double response_time = (response_end.tv_sec - response_start.tv_sec) + (response_end.tv_nsec - response_start.tv_nsec) / 1e9;
+    total_response_time += response_time;
+    total_operations++;
     return NULL;
 }
 
@@ -44,9 +71,12 @@ void measure_performance() {
     printf("System CPU time used: %ld.%06ld sec\n", usage.ru_stime.tv_sec, usage.ru_stime.tv_usec);
     printf("Maximum resident set size: %ld KB\n", usage.ru_maxrss);
     printf("Context switches: voluntary: %ld, involuntary: %ld\n", usage.ru_nvcsw, usage.ru_nivcsw);
+
+    printf("Average wait time: %.6f sec\n", total_wait_time / total_operations);
+    printf("Average response time: %.6f sec\n", total_response_time / total_operations);
 }
 
-void water(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     int numThreads;
     printf("생성할 스레드 수를 입력하세요: ");
     scanf("%d", &numThreads);
@@ -62,6 +92,8 @@ void water(int argc, char *argv[]) {
 
     int numDrinkers = numThreads / 3 * 2;
     int numPurifiers = numThreads - numDrinkers;
+
+    clock_gettime(CLOCK_REALTIME, &start_time);
 
     for (int i = 0; i < numThreads; i++) {
         if (i < numDrinkers) {
@@ -81,10 +113,17 @@ void water(int argc, char *argv[]) {
         }
     }
 
+    clock_gettime(CLOCK_REALTIME, &end_time);
+
+    double elapsed_time = (end_time.tv_sec - start_time.tv_sec) + (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
+
+    printf("Total elapsed time: %.6f sec\n", elapsed_time);
+
     measure_performance();
 
     local_mutex_destroy(&mutexWater);
     pthread_cond_destroy(&condWater);
     free(th);
 
+    return 0;
 }
