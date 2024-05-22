@@ -75,7 +75,7 @@ void printQueue(struct Queue* queue) {
     }
     printf("--------------------------------\n");
     for (int i = 0; i < queue->size; i++) {
-        printf("| p%d ", queue->array[(queue->front + i) % queue->capacity]);
+        printf("| p%d ", queue->array[(queue->front + i) % queue->capacity]+1);
     }
     printf("|\n--------------------------------\n");
 }
