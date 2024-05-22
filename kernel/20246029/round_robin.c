@@ -11,17 +11,17 @@ struct Process {
 };
 
 struct Queue {
-    int front, rear, size; 
-    unsigned capacity; 
+    int front, rear, size;
+    unsigned capacity;
     int* array;
 };
 
 struct Queue* createQueue(unsigned capacity) {
-    struct Queue* queue = (struct Queue*) malloc(sizeof(struct Queue)); // 큐 메모리 할당
+    struct Queue* queue = (struct Queue*)malloc(sizeof(struct Queue));
     queue->capacity = capacity;
-    queue->front = queue->size = 0; // 큐의 프론트와 사이즈 초기화
-    queue->rear = capacity - 1; // 큐의 리어 초기화
-    queue->array = (int*) malloc(queue->capacity * sizeof(int)); // 큐 배열 메모리 할당
+    queue->front = queue->size = 0;
+    queue->rear = capacity - 1;
+    queue->array = (int*)malloc(queue->capacity * sizeof(int));
     return queue;
 }
 
@@ -34,70 +34,66 @@ int isEmpty(struct Queue* queue) {
 }
 
 void enqueue(struct Queue* queue, int item) {
-    if (isFull(queue))
-        return; // 큐가 가득 차면 리턴
-    queue->rear = (queue->rear + 1) % queue->capacity; 
-    queue->array[queue->rear] = item; // 큐 배열에 요소 추가
-    queue->size += 1; // 큐 사이즈 증가
+    if (isFull(queue)) {
+        printf("큐가 가득 찼습니다. 더 이상 프로세스를 추가할 수 없습니다.\n");
+        return;
+    }
+    queue->rear = (queue->rear + 1) % queue->capacity;
+    queue->array[queue->rear] = item;
+    queue->size += 1;
 }
 
-// 큐에서 요소를 제거하는 함수
 int dequeue(struct Queue* queue) {
-    if (isEmpty(queue))
-        return -1; // 큐가 비어 있으면 -1 리턴
-    int item = queue->array[queue->front]; // 프론트 요소 가져오기
-    queue->front = (queue->front + 1) % queue->capacity; // 프론트 포인터 갱신
-    queue->size -= 1; // 큐 사이즈 감소
-    return item; // 제거한 요소 리턴
+    if (isEmpty(queue)) {
+        printf("큐가 비어 있습니다. 대기 중인 프로세스가 없습니다.\n");
+        return -1;
+    }
+    int item = queue->array[queue->front];
+    queue->front = (queue->front + 1) % queue->capacity;
+    queue->size -= 1;
+    return item;
 }
 
-// 프로세스들의 실행 시간을 계산하는 함수
-void calculateTime(struct Process *processes, int count, int quantum) {
-    struct Queue* queue = createQueue(count * 2); // 큐의 크기를 충분히 확보
+void calculateTime(struct Process* processes, int count, int quantum) {
+    struct Queue* queue = createQueue(count * 2);
     int time = 0, lastArrivalTime = 0;
     int remainingProcesses = count;
 
-    // 초기 시점에 도착한 프로세스들을 큐에 추가
     for (int i = 0; i < count; i++) {
         if (processes[i].arrivalTime == 0) {
             enqueue(queue, i);
-            lastArrivalTime = 0; // 가장 최근에 확인한 도착 시간 업데이트
+            lastArrivalTime = 0;
         }
     }
 
     while (remainingProcesses > 0) {
         if (!isEmpty(queue)) {
             int currentIndex = dequeue(queue);
-            struct Process *currentProcess = &processes[currentIndex];
+            struct Process* currentProcess = &processes[currentIndex];
 
             printf("현재 시간 %d: 프로세스 p%d 실행 중\n", time, currentProcess->pid);
 
-            // 실행 시간과 타임 퀀텀 비교
             int execTime = (currentProcess->remainingTime > quantum) ? quantum : currentProcess->remainingTime;
             time += execTime;
             currentProcess->remainingTime -= execTime;
 
-            // 프로세스가 완료된 경우
             if (currentProcess->remainingTime == 0) {
                 currentProcess->waitingTime = time - currentProcess->burstTime - currentProcess->arrivalTime;
                 currentProcess->turnaroundTime = time - currentProcess->arrivalTime;
                 remainingProcesses--;
                 printf("프로세스 p%d 종료\n", currentProcess->pid);
             } else {
-                // 프로세스가 아직 완료되지 않은 경우 다시 큐에 추가
                 enqueue(queue, currentIndex);
             }
 
-            // 새로 도착한 프로세스를 큐에 추가
             for (int i = 0; i < count; i++) {
                 if (processes[i].arrivalTime > lastArrivalTime && processes[i].arrivalTime <= time && processes[i].remainingTime > 0) {
                     enqueue(queue, i);
                     printf("프로세스 p%d 추가됨 (도착 시간: %d)\n", processes[i].pid, processes[i].arrivalTime);
                 }
             }
-            lastArrivalTime = time; // 가장 최근에 확인한 도착 시간 업데이트
+            lastArrivalTime = time;
         } else {
-            // 큐가 비어있을 경우 시간을 1 증가시키고 새로 도착한 프로세스를 확인
             time++;
             for (int i = 0; i < count; i++) {
                 if (processes[i].arrivalTime == time && processes[i].remainingTime > 0) {
@@ -116,7 +112,7 @@ void Round_Robin() {
     int count, quantum;
     printf("프로세스의 수를 입력하세요: ");
     scanf("%d", &count);
-    struct Process *processes = (struct Process*) malloc(sizeof(struct Process) * count);
+    struct Process* processes = (struct Process*)malloc(sizeof(struct Process) * count);
 
     for (int i = 0; i < count; i++) {
         printf("프로세스 %d의 도착 시간과 실행 시간을 입력하세요: ", i + 1);
@@ -128,7 +124,7 @@ void Round_Robin() {
     }
 
     printf("타임 퀀텀을 입력하세요: ");
-    scanf("%d", &quantum); // 타임 퀀텀 입력
+    scanf("%d", &quantum);
 
     calculateTime(processes, count, quantum);
 
