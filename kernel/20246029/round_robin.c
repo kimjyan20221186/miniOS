@@ -55,15 +55,13 @@ int dequeue(struct Queue* queue) {
 }
 
 void calculateTime(struct Process* processes, int count, int quantum) {
-    struct Queue* queue = createQueue(count * 2);
-    int time = 0, lastArrivalTime = 0;
+    struct Queue* queue = createQueue(count);
+    int time = 0;
     int remainingProcesses = count;
 
+    // 도착 시간 순서대로 초기 큐 설정
     for (int i = 0; i < count; i++) {
-        if (processes[i].arrivalTime == 0) {
-            enqueue(queue, i);
-            lastArrivalTime = 0;
-        }
+        enqueue(queue, i);
     }
 
     while (remainingProcesses > 0) {
@@ -85,23 +83,8 @@ void calculateTime(struct Process* processes, int count, int quantum) {
             } else {
                 enqueue(queue, currentIndex);
             }
-
-            for (int i = 0; i < count; i++) {
-                if (processes[i].arrivalTime > lastArrivalTime && processes[i].arrivalTime <= time && processes[i].remainingTime > 0) {
-                    enqueue(queue, i);
-                    printf("프로세스 p%d 추가됨 (도착 시간: %d)\n", processes[i].pid, processes[i].arrivalTime);
-                }
-            }
-            lastArrivalTime = time;
         } else {
             time++;
-            for (int i = 0; i < count; i++) {
-                if (processes[i].arrivalTime == time && processes[i].remainingTime > 0) {
-                    enqueue(queue, i);
-                    printf("프로세스 p%d 추가됨 (도착 시간: %d)\n", processes[i].pid, processes[i].arrivalTime);
-                }
-            }
-            lastArrivalTime = time;
         }
     }
     free(queue->array);
