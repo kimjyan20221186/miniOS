@@ -24,6 +24,7 @@ void calculateTime(struct Process *processes, int count, int quantum) {
                     processes[i].turnaroundTime = time - processes[i].arrivalTime;
                     processes[i].remainingTime = 0;
                     completed++;
+                    printf("프로세스 %d 종료, 종료 시간: %d\n", processes[i].pid, time);
                 }
             }
         }
